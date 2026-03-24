@@ -537,6 +537,7 @@
 <script>
   const SUPABASE_URL  = 'https://hfyawfkdpturontyymoz.supabase.co';
   const SUPABASE_KEY  = 'sb_publishable_uiszOcv1wXtZIK1ROic0LA_ZDcpNkTd';
+  const TMDB_KEY      = 'fa43c1c7b8f06f08c21ef45be25f864c';
 
   const CONFIGURED = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
 </script>
@@ -699,8 +700,24 @@ const MOVIES = [
   {no:47, title:"映画ドラえもん 新・のび太の海底鬼岩城", year:2026, poster:null},
 ];
 
-// poster取得は不要（ハードコード済み）
-async function fetchPosters() { /* no-op */ }
+// TMDb API でポスター画像パスを取得・更新
+async function fetchPosters() {
+  const base = 'https://api.themoviedb.org/3/search/movie';
+  const batch = 20;
+  for (let i = 0; i < MOVIES.length; i += batch) {
+    await Promise.all(MOVIES.slice(i, i + batch).map(async m => {
+      try {
+        const res = await fetch(
+          `${base}?api_key=${TMDB_KEY}&query=${encodeURIComponent(m.title)}&year=${m.year}&language=ja`
+        );
+        const data = await res.json();
+        if (data.results && data.results[0]?.poster_path) {
+          m.poster = P + data.results[0].poster_path;
+        }
+      } catch(e) { /* 既存のURLをそのまま使用 */ }
+    }));
+  }
+}
 
 // Era gradient for placeholder
 const ERA_COLORS = [
