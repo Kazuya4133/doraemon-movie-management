@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/doraemon-checklist.html" }
+  ]
+}
