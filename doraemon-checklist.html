@@ -924,7 +924,7 @@ function checkMilestone(count) {
   if (!m || milestonesDone.has(count)) return;
   milestonesDone.add(count);
   if (!useFallback) {
-    dbClient.from('milestones').upsert({ count, reached_at: new Date().toISOString() }).catch(()=>{});
+    (async () => { try { await dbClient.from('milestones').upsert({ count, reached_at: new Date().toISOString() }); } catch(e) {} })();
   } else {
     saveToLocalStorage();
   }
