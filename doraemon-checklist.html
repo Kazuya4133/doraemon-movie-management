@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>映画ドラえもん 鑑賞チェックリスト</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+  :root {
+    --navy:   #1A3A6B;
+    --blue:   #2E6DB4;
+    --sky:    #5BA4D4;
+    --dora:   #00A8E8;
+    --yellow: #FFD700;
+    --green:  #2A7A2A;
+    --green-bg: #D5F0DB;
+    --red:    #E8332A;
+    --bg:     #EEF4FB;
+    --card:   #FFFFFF;
+    --text:   #1A2A3A;
+    --muted:  #7A8FA6;
+    --border: #C8D8EA;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, #0F2550 60%, #1A3A8A 100%);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 20px 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .doraemon-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 900;
+    font-size: clamp(15px, 3vw, 21px);
+    color: white;
+    line-height: 1.2;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  h1 span {
+    display: block;
+    font-size: 0.6em;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.05em;
+  }
+
+  .progress-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .progress-label {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .progress-label strong {
+    font-size: 20px;
+    color: var(--yellow);
+    text-shadow: 0 0 12px rgba(255,215,0,0.5);
+  }
+
+  .progress-bar-wrap {
+    width: 160px;
+    height: 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--dora), var(--yellow));
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: white;
+    border-bottom: 2px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .filter-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 8px 10px 8px 34px;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--dora);
+    box-shadow: 0 0 0 3px rgba(0,168,232,0.15);
+    background: white;
+  }
+
+  select {
+    padding: 8px 28px 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A8FA6' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  select:focus {
+    border-color: var(--dora);
+  }
+
+  .filter-count {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    padding: 0 4px;
+  }
+
+  /* ── GRID ── */
+  .grid-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 1024px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 768px)  { .grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+  @media (max-width: 480px)  { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 2px solid transparent;
+    animation: fadeIn 0.3s ease both;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  }
+
+  .card.watched {
+    border-color: var(--green);
+    background: linear-gradient(180deg, #f0fff4 0%, white 40%);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-poster {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    display: block;
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+  }
+
+  .poster-placeholder {
+    width: 100%;
+    aspect-ratio: 2/3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .watched-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .card.watched .watched-badge {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .card-body {
+    padding: 8px 10px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .card-no {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .card-title {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: clamp(10px, 1.5vw, 12px);
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .card-year {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .btn-watch {
+    margin-top: 6px;
+    width: 100%;
+    padding: 7px 4px;
+    border: none;
+    border-radius: 20px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #E8EEF5;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  .btn-watch:hover {
+    background: var(--blue);
+    color: white;
+    transform: scale(1.02);
+  }
+
+  .card.watched .btn-watch {
+    background: var(--green);
+    color: white;
+  }
+
+  .card.watched .btn-watch:hover {
+    background: #1A5A1A;
+  }
+
+  .btn-watch:active {
+    transform: scale(0.96);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state svg {
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  /* ── MILESTONE POPUP ── */
+  .milestone-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .milestone-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .milestone-card {
+    background: white;
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    transform: scale(0.8) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .milestone-overlay.show .milestone-card {
+    transform: scale(1) translateY(0);
+  }
+
+  .milestone-emoji {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 16px;
+    display: block;
+    animation: bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  }
+
+  @keyframes bounce {
+    from { transform: scale(0) rotate(-10deg); }
+    to   { transform: scale(1) rotate(0deg); }
+  }
+
+  .milestone-title {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+
+  .milestone-msg {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .milestone-btn {
+    background: linear-gradient(135deg, var(--blue), var(--navy));
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 32px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(30,60,140,0.3);
+  }
+
+  .milestone-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(30,60,140,0.4);
+  }
+
+  .confetti {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confettiFall 2s ease-in forwards;
+    pointer-events: none;
+  }
+
+  @keyframes confettiFall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── SUPABASE CONFIG NOTICE ── */
+  .config-banner {
+    background: linear-gradient(135deg, #FFF3CD, #FFE69C);
+    border-bottom: 2px solid #FFC107;
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 13px;
+    color: #664D00;
+    display: none;
+  }
+
+  .config-banner.show { display: block; }
+  .config-banner strong { font-weight: 700; }
+  .config-banner code {
+    background: rgba(0,0,0,0.1);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  /* ── LOADING ── */
+  .loading-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    grid-column: 1 / -1;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--dora);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── STATUS ── */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    display: inline-block;
+    margin-right: 5px;
+    box-shadow: 0 0 0 2px rgba(76,175,80,0.3);
+  }
+  .status-dot.error { background: #F44336; box-shadow: 0 0 0 2px rgba(244,67,54,0.3); }
+  .status-dot.loading { background: var(--yellow); animation: pulse 1s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .db-status {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ SUPABASE CONFIG ════ -->
+<!-- ↓↓↓ ここにSupabaseの設定を入力してください ↓↓↓ -->
+<script>
+  const SUPABASE_URL  = 'YOUR_SUPABASE_URL';   // 例: https://xxxx.supabase.co
+  const SUPABASE_KEY  = 'YOUR_SUPABASE_ANON_KEY'; // Supabaseの anon/public key
+
+  const CONFIGURED = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+</script>
+<!-- ↑↑↑ ここまで ↑↑↑ -->
+
+<!-- 設定バナー（未設定時のみ表示） -->
+<div class="config-banner" id="configBanner">
+  ⚠️ <strong>Supabase未設定:</strong> HTMLファイルの冒頭にある
+  <code>SUPABASE_URL</code> と <code>SUPABASE_KEY</code> を設定してください。
+  設定するまでチェックは保存されません（localStorage一時保存になります）。
+</div>
+
+<!-- ═══════════════════════════════════════════ HEADER ════ -->
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <!-- Doraemon SVG icon -->
+      <svg class="doraemon-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="22" cy="22" r="20" fill="#00A8E8" stroke="white" stroke-width="1.5"/>
+        <ellipse cx="22" cy="27" rx="13" ry="9" fill="white"/>
+        <rect x="9" y="24" width="26" height="3" fill="white"/>
+        <!-- eyes -->
+        <circle cx="16" cy="17" r="5" fill="white" stroke="#333" stroke-width="1"/>
+        <circle cx="28" cy="17" r="5" fill="white" stroke="#333" stroke-width="1"/>
+        <circle cx="17" cy="17" r="2.5" fill="#222"/>
+        <circle cx="29" cy="17" r="2.5" fill="#222"/>
+        <circle cx="18" cy="16" r="1" fill="white"/>
+        <circle cx="30" cy="16" r="1" fill="white"/>
+        <!-- nose -->
+        <circle cx="22" cy="22" r="3" fill="#E8332A" stroke="#C0201A" stroke-width="0.5"/>
+        <!-- whiskers -->
+        <line x1="9" y1="24" x2="17" y2="23" stroke="#555" stroke-width="0.8"/>
+        <line x1="9" y1="26" x2="17" y2="25.5" stroke="#555" stroke-width="0.8"/>
+        <line x1="27" y1="23" x2="35" y2="24" stroke="#555" stroke-width="0.8"/>
+        <line x1="27" y1="25.5" x2="35" y2="26" stroke="#555" stroke-width="0.8"/>
+        <!-- mouth -->
+        <path d="M17 27 Q22 31 27 27" stroke="#555" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <!-- collar -->
+        <path d="M9 33 Q22 37 35 33" stroke="#E8332A" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- bell -->
+        <circle cx="22" cy="35" r="2.5" fill="#FFD700" stroke="#CCA000" stroke-width="0.8"/>
+      </svg>
+      <div>
+        <h1>映画ドラえもん<span>鑑賞チェックリスト</span></h1>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <strong id="watchedCount">0</strong> / 47作品みた
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="db-status" id="dbStatus">
+        <span class="status-dot loading" id="statusDot"></span>
+        <span id="statusText">接続中...</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════ FILTER BAR ════ -->
+<div class="filter-bar">
+  <div class="filter-inner">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="10.5" y1="10.5" x2="14" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="タイトルで検索...">
+    </div>
+    <select id="decadeFilter">
+      <option value="">すべての年代</option>
+      <option value="1980">1980年代</option>
+      <option value="1990">1990年代</option>
+      <option value="2000">2000年代</option>
+      <option value="2010">2010年代</option>
+      <option value="2020">2020年代</option>
+    </select>
+    <select id="watchedFilter">
+      <option value="">すべて</option>
+      <option value="watched">みた ✓</option>
+      <option value="unwatched">みてない</option>
+    </select>
+    <span class="filter-count" id="filterCount"></span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ GRID ════ -->
+<div class="grid-wrap">
+  <div class="grid" id="movieGrid">
+    <div class="loading-wrap"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ MILESTONE POPUP ════ -->
+<div class="milestone-overlay" id="milestoneOverlay">
+  <div class="milestone-card" id="milestoneCard">
+    <span class="milestone-emoji" id="milestoneEmoji">🎉</span>
+    <div class="milestone-title" id="milestoneTitle"></div>
+    <div class="milestone-msg" id="milestoneMsg"></div>
+    <button class="milestone-btn" onclick="closeMilestone()">やったー！</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// MOVIE DATA — poster は image.tmdb.org の直リンク
+// （APIコール不要・CORS問題なし）
+// ══════════════════════════════════════════════════════
+const P = 'https://image.tmdb.org/t/p/w342'; // TMDb image base
+
+const MOVIES = [
+  {no:1,  title:"ドラえもん のび太の恐竜",               year:1980, poster:P+"/cFhCxoSNnCNZOCOEMh7F9EJnTmp.jpg"},
+  {no:2,  title:"ドラえもん のび太の宇宙開拓史",         year:1981, poster:P+"/8vPNLnDzh0sHaqmAFqFjCAnQmgN.jpg"},
+  {no:3,  title:"ドラえもん のび太の大魔境",             year:1982, poster:P+"/szP1tGMQfwZg7v6Fep1lADqcAvA.jpg"},
+  {no:4,  title:"ドラえもん のび太の海底鬼岩城",         year:1983, poster:P+"/1Ep9P9GdqkTNNXiNh4JA3MHiTBJ.jpg"},
+  {no:5,  title:"ドラえもん のび太の魔界大冒険",         year:1984, poster:P+"/qeF4sYDqYJEzHWNyS6bvkrpFGAT.jpg"},
+  {no:6,  title:"ドラえもん のび太の宇宙小戦争",         year:1985, poster:P+"/cGSFUJt2N85NqIhYCCVVwvKX0Ks.jpg"},
+  {no:7,  title:"ドラえもん のび太と鉄人兵団",           year:1986, poster:P+"/1eZ8sXfNNQqJ5VX9C28EIIH0m5j.jpg"},
+  {no:8,  title:"ドラえもん のび太と竜の騎士",           year:1987, poster:P+"/8jkPxlFNDW1HFTK8wUL7vBTHiVT.jpg"},
+  {no:9,  title:"ドラえもん のび太のパラレル西遊記",     year:1988, poster:P+"/7p3j7lnNGbFpKhqNM8wJVOIsMrO.jpg"},
+  {no:10, title:"ドラえもん のび太の日本誕生",           year:1989, poster:P+"/3tTzDuCOGPGFkiTq5MR3Z5BQMGD.jpg"},
+  {no:11, title:"ドラえもん のび太とアニマル惑星",       year:1990, poster:P+"/eJHHcHUUZYrI8zfJSGNQJnRqBbv.jpg"},
+  {no:12, title:"ドラえもん のび太のドラビアンナイト",   year:1991, poster:P+"/sZNlbr6JbqkIi6JOFGiJXOqhLXl.jpg"},
+  {no:13, title:"ドラえもん のび太と雲の王国",           year:1992, poster:P+"/8q6DFNBnMZFwXXy4RfCnCZt3ZMV.jpg"},
+  {no:14, title:"ドラえもん のび太とブリキの迷宮",       year:1993, poster:P+"/gZD7gGKLHSy3aTu4sTeSFGLNQ9X.jpg"},
+  {no:15, title:"ドラえもん のび太と夢幻三剣士",         year:1994, poster:P+"/3y0OWQB1eMRSnqhRqvtJ3wJvSXb.jpg"},
+  {no:16, title:"ドラえもん のび太の創世日記",           year:1995, poster:P+"/6z0fUcpCOkBi5PjnkHiqTiOJcrC.jpg"},
+  {no:17, title:"ドラえもん のび太と銀河超特急",         year:1996, poster:P+"/yEWq8UxGQVfOJdLBzmgZeWfyBBZ.jpg"},
+  {no:18, title:"ドラえもん のび太のねじ巻き都市冒険記", year:1997, poster:P+"/nO3OHqmGVcAyc3F0bhpHiK3Jkfr.jpg"},
+  {no:19, title:"ドラえもん のび太の南海大冒険",         year:1998, poster:P+"/hVMzgZVYCVYFnz3l8W5rFGpGh7u.jpg"},
+  {no:20, title:"ドラえもん のび太の宇宙漂流記",         year:1999, poster:P+"/5eBF0lQ1DkINiI09OiaTgQOORLr.jpg"},
+  {no:21, title:"ドラえもん のび太の太陽王伝説",         year:2000, poster:P+"/4FBT5ZBlH5blhLDON8hWcKWy1mz.jpg"},
+  {no:22, title:"ドラえもん のび太と翼の勇者たち",       year:2001, poster:P+"/1hAMcLq3s7U1K6YNWX48r5R0b8I.jpg"},
+  {no:23, title:"ドラえもん のび太とロボット王国",       year:2002, poster:P+"/qE9RFjkTXOvAkH7Wh6KRnX1HDIV.jpg"},
+  {no:24, title:"ドラえもん のび太とふしぎ風使い",       year:2003, poster:P+"/3jHfLKiJmOBxhNSv9nDNzyCBbcH.jpg"},
+  {no:25, title:"ドラえもん のび太のワンニャン時空伝",   year:2004, poster:P+"/jdClWYGWVwLwZ6r5vg3FhXbSECP.jpg"},
+  {no:26, title:"映画ドラえもん のび太の恐竜2006",       year:2006, poster:P+"/rO7dw8F96CAf46O0z5LPz9cHnb9.jpg"},
+  {no:27, title:"映画ドラえもん のび太の新・魔界大冒険", year:2007, poster:P+"/yxDFfJxKMelD3mAjkrxGIFfRGgp.jpg"},
+  {no:28, title:"映画ドラえもん のび太と緑の巨人伝",     year:2008, poster:P+"/8s8dLHdkXsAdqsmICNkk65pHe6e.jpg"},
+  {no:29, title:"映画ドラえもん 新・のび太の宇宙開拓史", year:2009, poster:P+"/4w9J0gMXxUWWzFVEJGsFqMbVfT0.jpg"},
+  {no:30, title:"映画ドラえもん のび太の人魚大海戦",     year:2010, poster:P+"/qkQ7mEJOIbEzWiJKopZT82KMRXI.jpg"},
+  {no:31, title:"映画ドラえもん 新・のび太と鉄人兵団",   year:2011, poster:P+"/2xSPE9a7VqaLn4d52BNkQdqLVB0.jpg"},
+  {no:32, title:"映画ドラえもん のび太と奇跡の島",       year:2012, poster:P+"/cKhYD3J4FBzHBY2mJbwX4rKJkWB.jpg"},
+  {no:33, title:"映画ドラえもん のび太のひみつ道具博物館",year:2013, poster:P+"/oiGmD4x3MJRxCVqBGtSQmGGHENV.jpg"},
+  {no:34, title:"STAND BY ME ドラえもん",                year:2014, poster:P+"/kcXJHHfPQHXgUCHxHbhQ0jlstSp.jpg"},
+  {no:35, title:"映画ドラえもん 新・のび太の大魔境",     year:2014, poster:P+"/zOiWFdHMlIWYEQSSSLwj2TUiWYI.jpg"},
+  {no:36, title:"映画ドラえもん のび太の宇宙英雄記",     year:2015, poster:P+"/kQiSMNjxvyNBQTuHwUXMdGGpPYi.jpg"},
+  {no:37, title:"映画ドラえもん 新・のび太の日本誕生",   year:2016, poster:P+"/hxFuXBqxpFzMPVH6g6gFxgIBJqV.jpg"},
+  {no:38, title:"映画ドラえもん のび太の南極カチコチ大冒険",year:2017,poster:P+"/c7tPHPMHFqTiVHERkzI1J8FxUWg.jpg"},
+  {no:39, title:"映画ドラえもん のび太の宝島",           year:2018, poster:P+"/nQmBFWGo6IWVrDYxZFIRkGhRxzJ.jpg"},
+  {no:40, title:"映画ドラえもん のび太の月面探査記",     year:2019, poster:P+"/pQ3r7lbYmvIjBCCzJQdVuClLFkq.jpg"},
+  {no:41, title:"STAND BY ME ドラえもん 2",              year:2020, poster:P+"/bkF4JDKB3BBJIFBsmZx3UMqzVWC.jpg"},
+  {no:42, title:"映画ドラえもん のび太の新恐竜",         year:2020, poster:P+"/7TBcUMJRQkOzgB4rSqCidUPaHbr.jpg"},
+  {no:43, title:"映画ドラえもん のび太の宇宙小戦争2021", year:2022, poster:P+"/9fVasVjMCmQlMiqFfJ08rr5PFTF.jpg"},
+  {no:44, title:"映画ドラえもん のび太と空の理想郷",     year:2023, poster:P+"/mYYFJYAhQBJB3O8GGZH3dBqhvPL.jpg"},
+  {no:45, title:"映画ドラえもん のび太の地球交響楽",     year:2024, poster:P+"/7fFBBJON5WqZvGEHxpIHMPDSFkM.jpg"},
+  {no:46, title:"映画ドラえもん のび太の絵世界物語",     year:2025, poster:null},
+  {no:47, title:"映画ドラえもん 新・のび太の海底鬼岩城", year:2026, poster:null},
+];
+
+// poster取得は不要（ハードコード済み）
+async function fetchPosters() { /* no-op */ }
+
+// Era gradient for placeholder
+const ERA_COLORS = [
+  [1980, '#D4472A', '#8B1A0A'], [1990, '#1A5A8A', '#0A2A55'],
+  [2000, '#6A1A8A', '#3A0A55'], [2010, '#1A7A2A', '#0A4A0A'],
+  [2020, '#1A4A8A', '#0A2255'],
+];
+function eraColor(year) {
+  for (let i = ERA_COLORS.length-1; i >= 0; i--)
+    if (year >= ERA_COLORS[i][0]) return ERA_COLORS[i].slice(1);
+  return ['#1A3A6B','#0A1A3A'];
+}
+
+// ══════════════════════════════════════════════════════
+// MILESTONES
+// ══════════════════════════════════════════════════════
+const MILESTONES = [
+  { count:5,  emoji:'⭐', title:'5作品達成！',  msg:'いい調子だよ！\nどんどん見ていこう！' },
+  { count:10, emoji:'🌟', title:'10作品達成！', msg:'もう10作品みたね！\nどんどん進んでるね！' },
+  { count:20, emoji:'🏆', title:'20作品達成！', msg:'すごい！20作品！\nもうベテランだね！' },
+  { count:30, emoji:'🚀', title:'30作品達成！', msg:'30作品突破！\n折り返し地点も過ぎたよ！' },
+  { count:40, emoji:'💫', title:'40作品達成！', msg:'あと7作品で全制覇！\nもうすぐコンプリートだ！' },
+  { count:47, emoji:'🎉', title:'全作品制覇！', msg:'47作品すべて見たよ！\nドラえもん博士に認定！' },
+];
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let watched    = new Set();   // watched movie no's
+let milestonesDone = new Set();
+let dbClient   = null;
+let useFallback = false; // localStorage fallback
+
+// ══════════════════════════════════════════════════════
+// SUPABASE INIT
+// ══════════════════════════════════════════════════════
+async function initSupabase() {
+  setStatus('loading', '接続中...');
+
+  // ポスター画像を先に取得（失敗してもOK）
+  await fetchPosters();
+
+  if (!CONFIGURED) {
+    document.getElementById('configBanner').classList.add('show');
+    useFallback = true;
+    loadFromLocalStorage();
+    setStatus('error', '未設定（一時保存）');
+    render();
+    return;
+  }
+  try {
+    dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    await loadFromSupabase();
+    setStatus('ok', 'クラウド保存中');
+  } catch(e) {
+    console.error(e);
+    useFallback = true;
+    loadFromLocalStorage();
+    setStatus('error', 'オフライン（一時保存）');
+  }
+  render();
+}
+
+async function loadFromSupabase() {
+  // watched
+  const { data: wData, error: wErr } = await dbClient.from('watched').select('movie_no').eq('watched', true);
+  if (wErr) throw wErr;
+  watched = new Set((wData||[]).map(r => r.movie_no));
+
+  // milestones
+  const { data: mData } = await dbClient.from('milestones').select('count');
+  milestonesDone = new Set((mData||[]).map(r => r.count));
+}
+
+function loadFromLocalStorage() {
+  try {
+    const w = JSON.parse(localStorage.getItem('doraemon_watched') || '[]');
+    const m = JSON.parse(localStorage.getItem('doraemon_milestones') || '[]');
+    watched = new Set(w);
+    milestonesDone = new Set(m);
+  } catch(e) {}
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem('doraemon_watched', JSON.stringify([...watched]));
+  localStorage.setItem('doraemon_milestones', JSON.stringify([...milestonesDone]));
+}
+
+async function toggleWatch(no) {
+  const wasWatched = watched.has(no);
+  if (wasWatched) watched.delete(no); else watched.add(no);
+
+  // UI update immediately
+  updateCardState(no);
+  updateProgress();
+
+  // Check milestone (only when adding)
+  if (!wasWatched) checkMilestone(watched.size);
+
+  // Persist
+  if (useFallback) {
+    saveToLocalStorage();
+    return;
+  }
+  try {
+    if (!wasWatched) {
+      await dbClient.from('watched').upsert({ movie_no: no, watched: true, updated_at: new Date().toISOString() });
+    } else {
+      await dbClient.from('watched').upsert({ movie_no: no, watched: false, updated_at: new Date().toISOString() });
+    }
+  } catch(e) {
+    console.error('Save error', e);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════
+function render() {
+  const q      = document.getElementById('searchInput').value.toLowerCase();
+  const decade = document.getElementById('decadeFilter').value;
+  const wf     = document.getElementById('watchedFilter').value;
+
+  const filtered = MOVIES.filter(m => {
+    if (q && !m.title.toLowerCase().includes(q)) return false;
+    if (decade && Math.floor(m.year/10)*10 !== parseInt(decade)) return false;
+    if (wf === 'watched'   && !watched.has(m.no)) return false;
+    if (wf === 'unwatched' &&  watched.has(m.no)) return false;
+    return true;
+  });
+
+  document.getElementById('filterCount').textContent =
+    filtered.length < MOVIES.length ? `${filtered.length}件表示` : '';
+
+  const grid = document.getElementById('movieGrid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
+        <path d="M16 24 Q24 32 32 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="17" cy="18" r="2" fill="currentColor"/>
+        <circle cx="31" cy="18" r="2" fill="currentColor"/>
+      </svg>
+      <p>条件に合う作品が見つかりません</p>
+    </div>`;
+    updateProgress();
+    return;
+  }
+
+  grid.innerHTML = filtered.map(m => cardHTML(m)).join('');
+  updateProgress();
+}
+
+function cardHTML(m) {
+  const isWatched = watched.has(m.no);
+  const [c1, c2] = eraColor(m.year);
+  return `<div class="card ${isWatched ? 'watched' : ''}" id="card-${m.no}">
+    <img class="card-poster"
+      src="${m.poster}"
+      alt="${m.title}"
+      loading="lazy"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="poster-placeholder" style="display:none;background:linear-gradient(160deg,${c1},${c2})">
+      <svg width="36" height="36" viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="18" r="14" fill="#00A8E8" stroke="white" stroke-width="1.5"/>
+        <ellipse cx="22" cy="23" rx="9" ry="6" fill="white"/>
+        <circle cx="17" cy="14" r="3" fill="white"/><circle cx="27" cy="14" r="3" fill="white"/>
+        <circle cx="18" cy="14" r="1.5" fill="#222"/><circle cx="28" cy="14" r="1.5" fill="#222"/>
+        <circle cx="22" cy="18" r="2" fill="#E8332A"/>
+      </svg>
+      <span style="color:white;font-size:10px;font-weight:700;text-align:center;line-height:1.3;">${m.title.replace('映画ドラえもん ','').replace('ドラえもん ','')}</span>
+    </div>
+    <div class="watched-badge">✓</div>
+    <div class="card-body">
+      <div class="card-no">No.${m.no}</div>
+      <div class="card-title">${m.title}</div>
+      <div class="card-year">${m.year}年</div>
+      <button class="btn-watch" onclick="toggleWatch(${m.no})">
+        ${isWatched ? 'みた ✓' : 'みてない'}
+      </button>
+    </div>
+  </div>`;
+}
+
+function updateCardState(no) {
+  const card = document.getElementById(`card-${no}`);
+  if (!card) return;
+  const isWatched = watched.has(no);
+  card.classList.toggle('watched', isWatched);
+  card.querySelector('.btn-watch').textContent = isWatched ? 'みた ✓' : 'みてない';
+}
+
+function updateProgress() {
+  const count = watched.size;
+  document.getElementById('watchedCount').textContent = count;
+  document.getElementById('progressBar').style.width = `${(count/47)*100}%`;
+}
+
+// ══════════════════════════════════════════════════════
+// MILESTONE
+// ══════════════════════════════════════════════════════
+function checkMilestone(count) {
+  const m = MILESTONES.find(m => m.count === count);
+  if (!m || milestonesDone.has(count)) return;
+  milestonesDone.add(count);
+  if (!useFallback) {
+    dbClient.from('milestones').upsert({ count, reached_at: new Date().toISOString() }).catch(()=>{});
+  } else {
+    saveToLocalStorage();
+  }
+  showMilestone(m);
+}
+
+function showMilestone(m) {
+  document.getElementById('milestoneEmoji').textContent = m.emoji;
+  document.getElementById('milestoneTitle').textContent = m.title;
+  document.getElementById('milestoneMsg').textContent = m.msg;
+
+  // confetti
+  const card = document.getElementById('milestoneCard');
+  for (let i = 0; i < 18; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${-10 + Math.random()*20}px;
+      background:${['#FFD700','#00A8E8','#E8332A','#2A7A2A','#FF69B4'][Math.floor(Math.random()*5)]};
+      animation-delay:${Math.random()*0.5}s;
+      animation-duration:${1.5 + Math.random()}s;
+      transform:rotate(${Math.random()*360}deg);
+    `;
+    card.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+
+  document.getElementById('milestoneOverlay').classList.add('show');
+}
+
+function closeMilestone() {
+  document.getElementById('milestoneOverlay').classList.remove('show');
+}
+
+// click outside to close
+document.getElementById('milestoneOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeMilestone();
+});
+
+// ══════════════════════════════════════════════════════
+// STATUS
+// ══════════════════════════════════════════════════════
+function setStatus(type, text) {
+  const dot  = document.getElementById('statusDot');
+  const span = document.getElementById('statusText');
+  dot.className  = 'status-dot' + (type !== 'ok' ? ` ${type}` : '');
+  span.textContent = text;
+}
+
+// ══════════════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════════════
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('decadeFilter').addEventListener('change', render);
+document.getElementById('watchedFilter').addEventListener('change', render);
+
+// ══════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════
+initSupabase();
+</script>
+</body>
+</html>
